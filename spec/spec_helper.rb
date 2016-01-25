@@ -18,6 +18,16 @@
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 $LOAD_PATH.push File.expand_path('..', __dir__)
 
+require 'rack/test'
+require 'webmock/rspec'
+WebMock.allow_net_connect!(allow: 'echo-api.3scale.net')
+
+begin
+  require 'pry'
+rescue LoadError
+  # no pry
+end
+
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
@@ -40,6 +50,15 @@ RSpec.configure do |config|
     # a real object. This is generally recommended, and will default to
     # `true` in RSpec 4.
     mocks.verify_partial_doubles = true
+  end
+
+  config.include Rack::Test::Methods
+
+  config.around(:example, :env) do |example|
+    original = ENV.to_hash
+    ENV.update(example.metadata[:env])
+    example.run
+    ENV.replace(original)
   end
 
   # These two settings work together to allow you to limit a spec run
