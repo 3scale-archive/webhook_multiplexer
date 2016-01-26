@@ -28,3 +28,9 @@ WEBHOOK_MULTIPLEXER_URLS="GET,https://echo-api.3scale.net,Authentication: Bearer
 ```shell
 WEBHOOK_MULTIPLEXER_URLS="GET,https://echo-api.3scale.net,Authentication: Bearer somekey;POST,https://echo-api.3scale.net" rackup
 ```
+
+## Heroku
+```shell
+ heroku config:set WEBHOOK_MULTIPLEXER_URLS="http://requestb.in/18igo571;PUT,http://requestb.in/18igo571"
+ git push heroku master
+ ```
