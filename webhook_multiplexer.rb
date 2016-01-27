@@ -71,7 +71,7 @@ module WebhookMultiplexer
     case message
       when HTTP::Message
         message.status
-      when ::HTTPClient::RuntimeError # convert HTTPClient::ConnectTimeoutError to connect_timeout
+      when ::HTTPClient::TimeoutError, ::HTTPClient::BadResponseError # convert HTTPClient::ConnectTimeoutError to connect_timeout
         message.message.split('::').last.gsub(/([a-z\d])([A-Z])/,'\1_\2').sub(/_error$/i, '').downcase
     end
   end
