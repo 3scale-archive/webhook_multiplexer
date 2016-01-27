@@ -4,7 +4,9 @@ require 'net/http'
 module WebhookMultiplexer
   extend HTTPClient::IncludeClient
   include_http_client do |http|
-    http.debug_dev = $stdout if ENV['DEBUG']
+    if ENV['DEBUG']
+      (http.debug_dev = $stdout).sync = true
+    end
     http.connect_timeout = ENV.fetch('CONNECT_TIMEOUT', '5').to_i
     http.send_timeout = ENV.fetch('SEND_TIMEOUT', '5').to_i
     http.receive_timeout = ENV.fetch('RECEIVEt_TIMEOUT', '15').to_i
