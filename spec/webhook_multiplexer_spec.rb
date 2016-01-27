@@ -61,15 +61,15 @@ RSpec.describe WebhookMultiplexer do
     before { last_request.extend(WebhookMultiplexer::RequestHeaders) }
 
     it 'makes requests' do
-      expect(last_request.headers).to eq('FORWARDED_FOR' => '8.8.8.8', 'HOST' => 'example.org', 'COOKIE' => '')
+      expect(last_request.headers).to eq('Forwarded-For' => '8.8.8.8', 'Host' => 'example.org', 'Cookie' => '')
 
       expect(a_request(:get, 'http://echo-api.3scale.net/api/v1/foo')
                  .with(headers: last_request.headers.merge('HOST' => 'echo-api.3scale.net')
-                     .merge('AUTHORIZATION' => 'Bearer foobarbaz')))
+                     .merge('Authorization' => 'Bearer foobarbaz')))
           .to have_been_made.once
 
       expect(a_request(:put, 'https://echo-api.3scale.net/api/v2/echo/foo')
-                 .with(headers:  {'AUTHORIZATION' => 'Bearer tududu'}))
+                 .with(headers:  {'Authorization' => 'Bearer tududu'}))
           .to have_been_made.once
     end
   end

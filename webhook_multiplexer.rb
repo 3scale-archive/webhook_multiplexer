@@ -7,7 +7,7 @@ module WebhookMultiplexer
     http.debug_dev = $stdout if ENV['DEBUG']
     http.connect_timeout = ENV.fetch('CONNECT_TIMEOUT', '5').to_i
     http.send_timeout = ENV.fetch('SEND_TIMEOUT', '5').to_i
-    http.receive_timeout = ENV.fetch('RECEIVE_TIMEOUT', '15').to_i
+    http.receive_timeout = ENV.fetch('RECEIVEt_TIMEOUT', '15').to_i
   end
 
   module_function
@@ -17,7 +17,21 @@ module WebhookMultiplexer
       http_keys = env.keys.grep(/^HTTP_/)
       values = env.values_at(*http_keys)
       http_keys.map!{|key| key.sub(/^HTTP_/, '') }
-      Hash[http_keys.zip(values)]
+
+      normalize_headers Hash[http_keys.zip(values)]
+    end
+
+    def normalize_headers(headers)
+      array = headers.map { |name, value|
+        [name.to_s.split(/_|-/).map { |segment| segment.capitalize }.join("-"),
+         case value
+           when Regexp then value
+           when Array then (value.size == 1) ? value.first : value.map {|v| v.to_s}.sort
+           else value.to_s
+         end
+        ]
+      }
+      Hash[*array.inject([]) {|r,x| r + x}]
     end
   end
 
@@ -37,7 +51,7 @@ module WebhookMultiplexer
   def multiplex(request, locations)
     body = request.body.read
     headers = request.headers
-    headers.delete('HOST')
+    headers.delete('Host')
 
     connections = locations.map do |location|
 
@@ -49,7 +63,7 @@ module WebhookMultiplexer
                                 uri,
                                 request.query_string.split('&'),
                                 (has_body.nil? || has_body) ? body : nil,
-                                headers.merge('HOST' => uri.host).merge(location.headers))
+                                headers.merge('Host' => uri.host).merge(location.headers))
     end
 
     responses = connections.each(&:join).map do |connection|
