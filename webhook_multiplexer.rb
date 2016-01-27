@@ -112,14 +112,14 @@ module WebhookMultiplexer
     def initialize(url, request_method: nil, headers: nil)
       @url = url
       @request_method = request_method
-      @headers = headers || {}
+      @headers = normalize_headers(headers || {})
     end
 
     def self.parse(definition)
       method, url, *headers = definition.split(',')
       url, method = method, url if method && !url # swap if there is no method defined
       headers = Hash[headers.map{|line| k,v = line.split(/\s*:\s*/); [k.tr('-','_').upcase, v] }]
-      new(url, request_method: method, headers: normalize_headers(headers))
+      new(url, request_method: method, headers: headers)
     end
   end
 
