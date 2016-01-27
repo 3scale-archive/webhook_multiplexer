@@ -61,6 +61,9 @@ module WebhookMultiplexer
     headers = request.headers
     headers.delete('Host')
 
+    query = request.query_string.split('&')
+    query = nil if query.empty?
+
     connections = locations.map do |location|
 
       request_method = location.request_method || request.request_method
@@ -69,7 +72,7 @@ module WebhookMultiplexer
 
       http_client.request_async(request_method,
                                 uri,
-                                request.query_string.split('&'),
+                                query,
                                 (has_body.nil? || has_body) ? body : nil,
                                 headers.merge('Host' => uri.host).merge(location.headers))
     end
