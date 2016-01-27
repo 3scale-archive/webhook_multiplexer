@@ -12,14 +12,8 @@ module WebhookMultiplexer
 
   module_function
 
-  module RequestHeaders
-    def headers
-      http_keys = env.keys.grep(/^HTTP_/)
-      values = env.values_at(*http_keys)
-      http_keys.map!{|key| key.sub(/^HTTP_/, '') }
-
-      normalize_headers Hash[http_keys.zip(values)]
-    end
+  module NormalizeHeaders
+    module_function
 
     def normalize_headers(headers)
       array = headers.map { |name, value|
@@ -32,6 +26,18 @@ module WebhookMultiplexer
         ]
       }
       Hash[*array.inject([]) {|r,x| r + x}]
+    end
+  end
+
+  module RequestHeaders
+    include NormalizeHeaders
+
+    def headers
+      http_keys = env.keys.grep(/^HTTP_/)
+      values = env.values_at(*http_keys)
+      http_keys.map!{|key| key.sub(/^HTTP_/, '') }
+
+      normalize_headers Hash[http_keys.zip(values)]
     end
   end
 
@@ -96,6 +102,7 @@ module WebhookMultiplexer
   end
 
   class Location
+    include NormalizeHeaders
     attr_reader :request_method, :url, :headers
 
     alias_method :to_s, :url
@@ -110,7 +117,7 @@ module WebhookMultiplexer
       method, url, *headers = definition.split(',')
       url, method = method, url if method && !url # swap if there is no method defined
       headers = Hash[headers.map{|line| k,v = line.split(/\s*:\s*/); [k.tr('-','_').upcase, v] }]
-      new(url, request_method: method, headers: headers)
+      new(url, request_method: method, headers: normalize_headers(headers))
     end
   end
 
