@@ -19,6 +19,7 @@ module WebhookMultiplexer
 
     def normalize_headers(headers)
       array = headers.map { |name, value|
+        next unless value
         [name.to_s.split(/_|-/).map { |segment| segment.capitalize }.join("-"),
          case value
            when Regexp then value
@@ -39,7 +40,10 @@ module WebhookMultiplexer
       values = env.values_at(*http_keys)
       http_keys.map!{|key| key.sub(/^HTTP_/, '') }
 
-      normalize_headers Hash[http_keys.zip(values)]
+      normalize_headers Hash[http_keys.zip(values)].merge(
+        'CONTENT_LENGTH' => env['CONTENT_LENGTH'],
+        'CONTENT_TYPE' => env['CONTENT_TYPE']
+      )
     end
   end
 
